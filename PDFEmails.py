@@ -1,37 +1,19 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
-
-
 import re
+import os
 
 import pdfplumber
 import pandas as pd
 from collections import namedtuple
 
-
-# In[15]:
-
-
 Line = namedtuple('Line', 'name title function direct_email direct_phone')
-
-
-# In[16]:
-
 
 contact_re = re.compile(r'[Ee]xecutives [Aa]t [Tt]his [Ll]ocation')
 line_re = re.compile(r'([a-zA-Z]+\.?\s?[a-zA-Z ]+)\s{2}([a-zA-Z ]+)\s{2}([a-zA-Z]+,?\s?[a-zA-Z]+)\s{2}([a-zA-Z\.@ ]+)\s{2}([\d-]+)')
 
-
-# In[20]:
-
-
 file = "Enbridge-Reserve Pump Station Reserve, MT.pdf"
-
-
-# In[21]:
-
 
 lines = []
 
@@ -54,16 +36,5 @@ with pdfplumber.open(file) as pdf:
             if line_re.search(line):
                 print(line)
 
-
-# In[22]:
-
-
 df = pd.DataFrame(lines)
-df.head()
-
-
-# In[ ]:
-
-
-
-
+print(df.head())
