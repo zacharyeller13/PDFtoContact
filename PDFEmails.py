@@ -37,4 +37,4 @@ with pdfplumber.open(file) as pdf:
                 print(line)
 
 df = pd.DataFrame(lines)
-print(df.head())
+df.to_csv("Contact_List.csv", index=False)
