@@ -34,18 +34,18 @@ for file in files:
 
     with pdfplumber.open(file) as pdf:
         pages = pdf.pages
-        for page in pages[:-1]:
+        for page in pages:
             text = page.extract_text().split('\n')
 
 # Read each line and search for against line_re pattern, appending to lines if found
             for line in text:
 
-                if line_re.search(line) and "Name" not in line:                 # eliminate title block of contacts           
-                    items = line_re.search(line)[0].split("  ")                 # split on space*2
-                    items[3] = items[3].replace(' ', '')                        # replace space in email address
-                    contact = [item.strip() for item in items if item.strip()]  # if contact block is found, split between items and append to lines
+                if line_re.search(line) and not any(x in line for x in ["Name", "LLC", "Co."]): # eliminate title block & false matches          
+                    items = line_re.search(line)[0].split("  ")                                 # split on space*2
+                    items[3] = items[3].replace(' ', '')                                        # replace space in email address
+                    contact = [item.strip() for item in items if item.strip()]                  # if contact block is found, split between items and append to lines
 
-                    if not index_in_list(contact, 4):                           # if phone number OR email address is missing, add None at that index
+                    if not index_in_list(contact, 4):                                           # if phone number OR email address is missing, add None at that index
                         if not email_check(contact, 3):
                             contact.insert(3, None)
                         
