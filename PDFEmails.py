@@ -2,7 +2,6 @@
 # coding: utf-8
 
 import re
-import os
 import glob
 
 import pdfplumber
@@ -24,26 +23,24 @@ lines = []
 
 # for each PDF in files read PDF and grab line(s)
 for file in files:
-    
+
+    print("Processing file {}".format(file))
+
     with pdfplumber.open(file) as pdf:
         pages = pdf.pages
         for page in pages:
             text = page.extract_text().split('\n')
 
-    # Read each line and search for against start of contact block
+# Read each line and search for against line_re pattern
+            for line in text:
+                if line_re.search(line):                
 
-            for i, line in enumerate(text):
-                start = contact_re.search(line)
-                
-                if start:
-                    contact = text[i+2]
-                
-    # if contact block is found, search for contact and append to lines
-                    if line_re.search(contact):
-                        items = contact.split("  ")
-                        items[3] = items[3].replace(' ', '')
-                        lines.append(Line(*items))
+# if contact block is found, split between items and append to lines
+                    items = line.split("  ")
+                    items[3] = items[3].replace(' ', '')
+                    lines.append(Line(*items))
 
 # transform lines to pandas dataframe, write to a CSV
 df = pd.DataFrame(lines)
 df.to_csv("Contact_List.csv", index=False)
+print("Done")
