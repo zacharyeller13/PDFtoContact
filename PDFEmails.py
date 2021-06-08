@@ -19,7 +19,7 @@ def email_check(list_, index):
 Line = namedtuple('Line', 'name title function direct_email direct_phone')
 
 # regex search pattern
-line_re = re.compile(r'([a-zA-Z]+\.?\s?[a-zA-Z() ]+)\s{2}([a-zA-Z\s\.]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\.]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)')
+line_re = re.compile(r'([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\.]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)')
 
 # Get all files in folder
 files = glob.glob('*.pdf')
