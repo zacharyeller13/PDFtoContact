@@ -56,5 +56,6 @@ for file in files:
 
 # transform lines to pandas dataframe, write to a CSV
 df = pd.DataFrame(lines)
+df.drop_duplicates(inplace=True)
 df.to_csv("Contact_List.csv", index=False)
 print("Done")
