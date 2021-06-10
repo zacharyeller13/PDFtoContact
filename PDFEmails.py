@@ -8,18 +8,38 @@ import pdfplumber
 import pandas as pd
 from collections import namedtuple
 
-# define indexing function and email address check
+# define helper functions: indexing function, email address check, get_company
 def index_in_list(list_, index):
     return index < len(list_)
 
 def email_check(list_, index):
-    return "@" in list_[index]
+    return '@' in list_[index]
+
+def get_company(pages):
+    page = pages[0]
+
+    line = page.extract_text().split('\n')[1]
+    company = line.split("Company ID:")[0].strip()
+
+    return company
+
+def get_city_state(pages, pattern):
+    page = pages[0]
+    lines = page.extract_text().split('\n')
+
+    for line in lines:
+        city_state = pattern.search(line)
+        if city_state:
+            return city_state[0]
+    
+    return
 
 # prototype of line
-Line = namedtuple('Line', 'name title function direct_email direct_phone')
+Line = namedtuple('Line', 'name title function direct_email direct_phone site city_state_zip')
 
-# regex search pattern
-line_re = re.compile(r'([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\.]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)')
+# regex search patterns
+line_re = re.compile(r"([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\.]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)")
+city_re = re.compile(r"^([a-zA-Z\s]+),?\s([A-Z]{2})\s+(\d{5}-?(\d{4})?)")
 
 # Get all files in folder
 files = glob.glob('*.pdf')
@@ -34,6 +54,10 @@ for file in files:
 
     with pdfplumber.open(file) as pdf:
         pages = pdf.pages
+        
+        site = get_company(pages)                       # Get the site location
+        city_state_zip = get_city_state(pages, city_re) # Get city, state, zip of location
+
         for page in pages:
             text = page.extract_text().split('\n')
 
@@ -52,7 +76,7 @@ for file in files:
                         else:
                             contact.append(None)
                     
-                    lines.append(Line(*contact))
+                    lines.append(Line(*contact, site, city_state_zip))
 
 # transform lines to pandas dataframe, write to a CSV
 df = pd.DataFrame(lines)
