@@ -30,7 +30,8 @@ def get_city_state(pages, pattern):
     for line in lines:
         city_state = pattern.search(line)
         if city_state:
-            return city_state[0]
+            city_state = [city_state[1], city_state[2].replace(" ",""), city_state[3].replace(" ", "")]
+            return " ".join(city_state)
     
     return
 
@@ -39,7 +40,7 @@ Line = namedtuple('Line', 'name title function direct_email direct_phone site ci
 
 # regex search patterns
 line_re = re.compile(r"([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\.]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)")
-city_re = re.compile(r"^([a-zA-Z\s]+),?\s([A-Z]{2})\s+(\d{5}-?(\d{4})?)")
+city_re = re.compile(r"^([a-zA-Z\s]+,?)\s+([A-Z]+ *[A-Z]+)\s+([\d\s]+)")
 
 # Get all files in folder
 files = glob.glob('*.pdf')
