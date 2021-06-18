@@ -33,17 +33,16 @@ def get_city_state(pages, pattern):
     for line in lines:
         city_state = pattern.search(line)
         if city_state:
-            city_state = [city_state[1], city_state[2].replace(" ",""), city_state[3].replace(" ", "")]
-            return " ".join(city_state)
-    
+            city_state = [city_state[1].strip(), city_state[2].replace(" ",""), city_state[3].replace(" ", "")]
+            return city_state
     return
 
 # prototype of line
-Line = namedtuple('Line', 'name title function direct_email direct_phone site city_state_zip')
+Line = namedtuple('Line', 'name title function direct_email direct_phone site city state zip')
 
 # regex search patterns
 line_re = re.compile(r"([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\.]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)")
-city_re = re.compile(r"^([a-zA-Z\s]+,?)\s+([A-Z]+ *[A-Z]+)\s+([\d\s]+)")
+city_re = re.compile(r"^([a-zA-Z\s]+),?\s+([A-Z]+ *[A-Z]+)\s+([\d\s]+)")
 
 # Get all files in folder
 files = glob.glob('*.pdf')
@@ -81,7 +80,7 @@ for file in files:
                             else:
                                 contact.append(None)
 
-                        lines.append(Line(*contact, site, city_state_zip))
+                        lines.append(Line(*contact, site, *city_state_zip))
         except TypeError:
             os.makedirs("errors", exist_ok=True)
             move(file, "./errors/")
