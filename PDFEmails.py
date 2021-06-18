@@ -16,7 +16,10 @@ def index_in_list(list_, index):
     return index < len(list_)
 
 def email_check(list_, index):
-    return '@' in list_[index]
+    try:
+        return (x in list_[index] for x in ['@', "View Email", "ViewEmail"])
+    except (IndexError, TypeError):
+        return
 
 def get_company(pages):
     page = pages[0]
@@ -37,11 +40,41 @@ def get_city_state(pages, pattern):
             return city_state
     return
 
+# pull actual searching into a function to allow exiting function when reaching end of contact block
+def search_lines(pages, pattern):
+    contacts = []
+    for page in pages:
+        text = page.extract_text().split('\n')
+    
+        for line in text:
+
+            if any(x in line for x in ["Corporate Family", "Parent Company", "My Notes", "Potential Competitors"]):
+                return contacts
+
+            elif pattern.search(line) and not any(x in line for x in ["Name", "Title", "Function"]):
+                items = pattern.search(line)[0].split("  ")
+                items[3] = items[3].replace(' ', '')
+                contact = [item.strip() for item in items if item.strip()]
+                
+                while not index_in_list(contact, 4):
+                    if not email_check(contact, 3):
+                        contact.insert(3, None)
+
+                    else:
+                        contact.append(None)
+            
+                contacts.append(contact)
+                
+            else:
+                continue
+
+        return contacts
+
 # prototype of line
 Line = namedtuple('Line', 'name title function direct_email direct_phone site city state zip')
 
 # regex search patterns
-line_re = re.compile(r"([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.\-,&]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\._]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)")
+line_re = re.compile(r"([a-zA-Z-\.()' ]+)\s{2}([a-zA-Z\s\.\-,&]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\._]+@ ?[\da-zA-Z\.\-]*)*\s*([Ext: \d-]*)")
 city_re = re.compile(r"^([a-zA-Z\s]+),?\s+([A-Z]+ *[A-Z]+)\s+([\d\s]+)")
 
 # Get all files in folder
@@ -57,38 +90,25 @@ for file in files:
 
     with pdfplumber.open(file) as pdf:
         pages = pdf.pages
-        
+
+# wrap in a try/except to catch TypeErrors and IndexErrors        
         try:
             site = get_company(pages)                       # Get the site location
             city_state_zip = get_city_state(pages, city_re) # Get city, state, zip of location
-
-            for page in pages:
-                text = page.extract_text().split('\n')
-                
+                         
 # Read each line and search for against line_re pattern, appending to lines if found
-                for line in text:
+            contacts = search_lines(pages, line_re)
 
-                    if line_re.search(line) and not any(x in line for x in ["Name", "LLC", "Co."]): # eliminate title block & false matches          
-                        items = line_re.search(line)[0].split("  ")                                 # split on space*2
-                        items[3] = items[3].replace(' ', '')                                        # replace space in email address
-                        contact = [item.strip() for item in items if item.strip()]                  # if contact block is found, split between items and append to lines
+            for contact in contacts:
+                lines.append(Line(*contact, site, *city_state_zip))
 
-                        if not index_in_list(contact, 4):                                           # if phone number OR email address is missing, add None at that index
-                            if not email_check(contact, 3):
-                                contact.insert(3, None)
- 
-                            else:
-                                contact.append(None)
-
-                        lines.append(Line(*contact, site, *city_state_zip))
         except TypeError:
-            os.makedirs("errors", exist_ok=True)
-            move(file, "./errors/")
+            os.makedirs("errors/TypeError", exist_ok=True)
+            move(file, "./errors/TypeError")
 
         except IndexError:
-            os.makedirs("errors", exist_ok=True)
-            move(file, "./errors/")
-            input("IndexError")         
+            os.makedirs("errors/IndexError", exist_ok=True)
+            move(file, "./errors/IndexError")        
 
 # transform lines to pandas dataframe, write to a CSV
 df = pd.DataFrame(lines)
