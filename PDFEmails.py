@@ -41,7 +41,7 @@ def get_city_state(pages, pattern):
 Line = namedtuple('Line', 'name title function direct_email direct_phone site city state zip')
 
 # regex search patterns
-line_re = re.compile(r"([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\.]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)")
+line_re = re.compile(r"([a-zA-Z-\.() ]+)\s{2}([a-zA-Z\s\.\-,&]+)\s{2}([a-zA-Z,/&\s]+)\s{2}([a-zA-Z\._]*@ ?[a-zA-Z\.]*)*\s*([Ext: \d-]*)")
 city_re = re.compile(r"^([a-zA-Z\s]+),?\s+([A-Z]+ *[A-Z]+)\s+([\d\s]+)")
 
 # Get all files in folder
@@ -84,6 +84,11 @@ for file in files:
         except TypeError:
             os.makedirs("errors", exist_ok=True)
             move(file, "./errors/")
+
+        except IndexError:
+            os.makedirs("errors", exist_ok=True)
+            move(file, "./errors/")
+            input("IndexError")         
 
 # transform lines to pandas dataframe, write to a CSV
 df = pd.DataFrame(lines)
